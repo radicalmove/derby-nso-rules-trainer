@@ -2004,6 +2004,7 @@ const ui = {
   refPositionGrid: document.getElementById("refPositionGrid"),
   simulationList: document.getElementById("simulationList"),
   simulationDetail: document.getElementById("simulationDetail"),
+  mobileLayouts: [...document.querySelectorAll(".mobile-split")],
   drillModeButtons: [...document.querySelectorAll(".drill-mode-btn")],
   quizCard: document.getElementById("quizCard")
 };
@@ -2020,6 +2021,13 @@ const state = {
   signalSearch: "",
   selectedSignalId: null,
   selectedSimulationId: null,
+  isMobileLayout: false,
+  mobileViews: {
+    nso: "list",
+    rules: "list",
+    signals: "list",
+    simulation: "list"
+  },
   simulation: {
     started: false,
     complete: false,
@@ -2040,12 +2048,15 @@ const state = {
   }
 };
 
+const mobileMediaQuery = window.matchMedia("(max-width: 900px)");
+
 function init() {
   state.learnedRoles = loadSet(STORAGE_KEYS.learnedRoles);
   state.learnedRules = loadSet(STORAGE_KEYS.learnedRules);
 
   updateSummary();
   bindEvents();
+  syncMobileLayoutMode();
   renderRoleList();
   renderRuleList();
   renderSignalList();
@@ -2098,6 +2109,65 @@ function bindEvents() {
       startDrill(button.dataset.drillMode, null);
     });
   });
+
+  ui.mobileLayouts.forEach((layout) => {
+    [...layout.querySelectorAll(".mobile-view-btn")].forEach((button) => {
+      button.addEventListener("click", () => {
+        const layoutId = layout.dataset.mobileLayout;
+        const view = button.dataset.mobileViewBtn;
+        setMobileLayoutView(layoutId, view);
+      });
+    });
+  });
+
+  if (mobileMediaQuery.addEventListener) {
+    mobileMediaQuery.addEventListener("change", syncMobileLayoutMode);
+  } else if (mobileMediaQuery.addListener) {
+    mobileMediaQuery.addListener(syncMobileLayoutMode);
+  }
+}
+
+function syncMobileLayoutMode() {
+  state.isMobileLayout = mobileMediaQuery.matches;
+  document.body.classList.toggle("mobile-layout", state.isMobileLayout);
+
+  ui.mobileLayouts.forEach((layout) => {
+    const layoutId = layout.dataset.mobileLayout;
+    const view = state.isMobileLayout ? state.mobileViews[layoutId] || "list" : "detail";
+    applyMobileLayoutView(layout, view, false);
+  });
+}
+
+function setMobileLayoutView(layoutId, view) {
+  const layout = ui.mobileLayouts.find((entry) => entry.dataset.mobileLayout === layoutId);
+  if (!layout || (view !== "list" && view !== "detail")) {
+    return;
+  }
+
+  applyMobileLayoutView(layout, view, true);
+}
+
+function applyMobileLayoutView(layout, view, persist) {
+  layout.dataset.mobileView = view;
+
+  const layoutId = layout.dataset.mobileLayout;
+  if (persist && layoutId) {
+    state.mobileViews[layoutId] = view;
+  }
+
+  [...layout.querySelectorAll(".mobile-view-btn")].forEach((button) => {
+    const isActive = button.dataset.mobileViewBtn === view;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-pressed", isActive ? "true" : "false");
+  });
+}
+
+function revealMobileDetail(layoutId) {
+  if (!state.isMobileLayout) {
+    return;
+  }
+
+  setMobileLayoutView(layoutId, "detail");
 }
 
 function setActiveTab(tabId) {
@@ -2120,6 +2190,10 @@ function setActiveTab(tabId) {
 
   if (tabId === "simulation") {
     renderSimulationDetail();
+  }
+
+  if (state.isMobileLayout && state.mobileViews[tabId]) {
+    setMobileLayoutView(tabId, state.mobileViews[tabId]);
   }
 }
 
@@ -2189,6 +2263,7 @@ function renderRoleList() {
     button.addEventListener("click", () => {
       state.selectedRoleId = button.dataset.roleId;
       renderRoleList();
+      revealMobileDetail("nso");
     });
   });
 
@@ -2278,6 +2353,7 @@ function renderRuleList() {
     button.addEventListener("click", () => {
       state.selectedRuleId = button.dataset.ruleId;
       renderRuleList();
+      revealMobileDetail("rules");
     });
   });
 
@@ -2388,6 +2464,7 @@ function renderSignalList() {
     button.addEventListener("click", () => {
       state.selectedSignalId = button.dataset.signalId;
       renderSignalList();
+      revealMobileDetail("signals");
     });
   });
 
@@ -2475,6 +2552,7 @@ function renderSimulationList() {
       }
       renderSimulationList();
       renderSimulationDetail();
+      revealMobileDetail("simulation");
     });
   });
 
@@ -3536,18 +3614,21 @@ function jumpToReview(review) {
   if (review.tab === "nso") {
     state.selectedRoleId = review.id;
     renderRoleList();
+    revealMobileDetail("nso");
     return;
   }
 
   if (review.tab === "rules") {
     state.selectedRuleId = review.id;
     renderRuleList();
+    revealMobileDetail("rules");
     return;
   }
 
   if (review.tab === "signals") {
     state.selectedSignalId = review.id;
     renderSignalList();
+    revealMobileDetail("signals");
     return;
   }
 

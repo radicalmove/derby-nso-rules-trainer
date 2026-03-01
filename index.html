@@ -70,14 +70,22 @@
           />
         </div>
 
-        <div class="learn-layout">
+        <div class="learn-layout mobile-split" data-mobile-layout="nso" data-mobile-view="list">
+          <div class="mobile-view-toggle" role="group" aria-label="NSO mobile view mode">
+            <button class="mobile-view-btn active" type="button" data-mobile-view-btn="list" aria-pressed="true">Browse Roles</button>
+            <button class="mobile-view-btn" type="button" data-mobile-view-btn="detail" aria-pressed="false">Role Detail</button>
+          </div>
           <aside id="roleList" class="role-list" aria-label="NSO role list"></aside>
           <article id="roleDetail" class="role-detail" aria-live="polite"></article>
         </div>
       </section>
 
       <section id="rules" class="tab-panel" role="tabpanel" aria-labelledby="tab-rules" hidden>
-        <div class="learn-layout">
+        <div class="learn-layout mobile-split" data-mobile-layout="rules" data-mobile-view="list">
+          <div class="mobile-view-toggle" role="group" aria-label="Rules mobile view mode">
+            <button class="mobile-view-btn active" type="button" data-mobile-view-btn="list" aria-pressed="true">Browse Modules</button>
+            <button class="mobile-view-btn" type="button" data-mobile-view-btn="detail" aria-pressed="false">Module Detail</button>
+          </div>
           <aside id="ruleList" class="role-list" aria-label="Rule module list"></aside>
           <article id="ruleDetail" class="role-detail" aria-live="polite"></article>
         </div>
@@ -102,7 +110,11 @@
           />
         </div>
 
-        <div class="learn-layout">
+        <div class="learn-layout mobile-split" data-mobile-layout="signals" data-mobile-view="list">
+          <div class="mobile-view-toggle" role="group" aria-label="Signals mobile view mode">
+            <button class="mobile-view-btn active" type="button" data-mobile-view-btn="list" aria-pressed="true">Browse Signals</button>
+            <button class="mobile-view-btn" type="button" data-mobile-view-btn="detail" aria-pressed="false">Signal Detail</button>
+          </div>
           <aside id="signalList" class="role-list" aria-label="Ref signal list"></aside>
           <article id="signalDetail" class="role-detail" aria-live="polite"></article>
         </div>
@@ -137,7 +149,11 @@
           Play through jam timelines. The simulation pauses at decision points and scores your
           choices.
         </p>
-        <div class="learn-layout">
+        <div class="learn-layout mobile-split" data-mobile-layout="simulation" data-mobile-view="list">
+          <div class="mobile-view-toggle" role="group" aria-label="Simulation mobile view mode">
+            <button class="mobile-view-btn active" type="button" data-mobile-view-btn="list" aria-pressed="true">Browse Scenarios</button>
+            <button class="mobile-view-btn" type="button" data-mobile-view-btn="detail" aria-pressed="false">Scenario Detail</button>
+          </div>
           <aside
             id="simulationList"
             class="role-list"
