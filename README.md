@@ -37,6 +37,7 @@ Single-page training app for Flat Track Roller Derby that covers NSO responsibil
   - per-question explanations
   - quick jump back to missed topics
   - expanded NSO bank with at least 20 targeted drill questions per NSO role
+  - expanded Rules bank with at least 20 targeted drill questions per rules module
 - Step-by-step jam simulations:
   - timeline playback with pause at decision checkpoints
   - manual or auto-play progression
@@ -62,6 +63,11 @@ python3 -m http.server 8000
 ```
 
 Then open `http://localhost:8000`.
+
+## Share links
+
+- Stable GitHub Pages: `https://radicalmove.github.io/derby-nso-rules-trainer/`
+- Mac mini fallback tunnel: see `MAC_MINI_COURSE_SETUP.md` for current command/output.
 
 ## Files
 
