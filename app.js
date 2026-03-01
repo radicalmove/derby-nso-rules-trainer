@@ -959,16 +959,24 @@ function generateNsoRoleDrillQuestions() {
     const review = { tab: "nso", id: role.id, label: role.name };
     const roleFacts = normalizeRoleFacts(role);
     const roleQuestions = [];
+    const identityFacts = [
+      ...roleFacts.before,
+      ...roleFacts.during,
+      ...roleFacts.between,
+      ...roleFacts.must,
+      ...roleFacts.edge
+    ];
 
     roleQuestions.push(
       buildRoleActionQuestion({
         role,
         review,
-        prompt: `Pre-jam pressure scenario: As ${role.name}, which action is the strongest first control to prevent downstream errors?`,
+        prompt: `Which action is explicitly part of ${role.name}'s pre-jam duties?`,
         answer: roleFacts.before[0],
         explanation: `${role.name} should prioritize this pre-jam control action before the first whistle.`,
         pool: actionPools.before,
-        seed: roleIndex * 41 + 1
+        seed: roleIndex * 41 + 1,
+        forbidden: roleFacts.before
       })
     );
 
@@ -976,11 +984,12 @@ function generateNsoRoleDrillQuestions() {
       buildRoleActionQuestion({
         role,
         review,
-        prompt: `Pre-jam systems check: Which task is specifically part of ${role.name}'s readiness workflow?`,
+        prompt: `Which additional task is listed under ${role.name}'s pre-jam duties?`,
         answer: roleFacts.before[1],
         explanation: `${role.name} owns this pre-jam readiness responsibility.`,
         pool: actionPools.before,
-        seed: roleIndex * 41 + 2
+        seed: roleIndex * 41 + 2,
+        forbidden: roleFacts.before
       })
     );
 
@@ -988,11 +997,12 @@ function generateNsoRoleDrillQuestions() {
       buildRoleActionQuestion({
         role,
         review,
-        prompt: `Live-jam decision point: What should ${role.name} do first when this situation appears during a jam?`,
+        prompt: `Which action is explicitly part of ${role.name}'s in-jam duties?`,
         answer: roleFacts.during[0],
         explanation: `This is a primary in-jam responsibility for ${role.name}.`,
         pool: actionPools.during,
-        seed: roleIndex * 41 + 3
+        seed: roleIndex * 41 + 3,
+        forbidden: roleFacts.during
       })
     );
 
@@ -1000,11 +1010,12 @@ function generateNsoRoleDrillQuestions() {
       buildRoleActionQuestion({
         role,
         review,
-        prompt: `In-jam escalation: Which response best matches ${role.name}'s role under active officiating load?`,
+        prompt: `Which additional task is listed for ${role.name} during jams?`,
         answer: roleFacts.during[1],
         explanation: `${role.name} is expected to execute this response while play continues.`,
         pool: actionPools.during,
-        seed: roleIndex * 41 + 4
+        seed: roleIndex * 41 + 4,
+        forbidden: roleFacts.during
       })
     );
 
@@ -1012,11 +1023,12 @@ function generateNsoRoleDrillQuestions() {
       buildRoleActionQuestion({
         role,
         review,
-        prompt: `Post-jam control check: Which action belongs to ${role.name} between jams to maintain data integrity?`,
+        prompt: `Which action is explicitly part of ${role.name}'s between-jam duties?`,
         answer: roleFacts.between[0],
         explanation: `${role.name} performs this between-jam control to prevent cumulative errors.`,
         pool: actionPools.between,
-        seed: roleIndex * 41 + 5
+        seed: roleIndex * 41 + 5,
+        forbidden: roleFacts.between
       })
     );
 
@@ -1024,11 +1036,12 @@ function generateNsoRoleDrillQuestions() {
       buildRoleActionQuestion({
         role,
         review,
-        prompt: `Between-jam correction workflow: Which step is most aligned to ${role.name}?`,
+        prompt: `Which additional task is listed for ${role.name} between jams?`,
         answer: roleFacts.between[1],
         explanation: `${role.name} should execute this correction-step before next jam launch.`,
         pool: actionPools.between,
-        seed: roleIndex * 41 + 6
+        seed: roleIndex * 41 + 6,
+        forbidden: roleFacts.between
       })
     );
 
@@ -1040,7 +1053,8 @@ function generateNsoRoleDrillQuestions() {
         answer: roleFacts.must[0],
         explanation: `This item is a direct rule/procedure anchor for ${role.name}.`,
         pool: actionPools.must,
-        seed: roleIndex * 41 + 7
+        seed: roleIndex * 41 + 7,
+        forbidden: roleFacts.must
       })
     );
 
@@ -1048,11 +1062,12 @@ function generateNsoRoleDrillQuestions() {
       buildRoleActionQuestion({
         role,
         review,
-        prompt: `Advanced policy check: Select the must-know statement most specific to ${role.name}.`,
+        prompt: `Which additional must-know statement belongs to ${role.name}?`,
         answer: roleFacts.must[1],
         explanation: `${role.name} is expected to apply this rule/procedure constraint in-game.`,
         pool: actionPools.must,
-        seed: roleIndex * 41 + 8
+        seed: roleIndex * 41 + 8,
+        forbidden: roleFacts.must
       })
     );
 
@@ -1060,11 +1075,12 @@ function generateNsoRoleDrillQuestions() {
       buildRoleActionQuestion({
         role,
         review,
-        prompt: `Edge-case scenario: Which response should ${role.name} prioritize first in this exception condition?`,
+        prompt: `Which edge-case responsibility belongs to ${role.name}?`,
         answer: roleFacts.edge[0],
         explanation: `This is one of the high-risk edge-case responsibilities for ${role.name}.`,
         pool: actionPools.edge,
-        seed: roleIndex * 41 + 9
+        seed: roleIndex * 41 + 9,
+        forbidden: roleFacts.edge
       })
     );
 
@@ -1072,11 +1088,12 @@ function generateNsoRoleDrillQuestions() {
       buildRoleActionQuestion({
         role,
         review,
-        prompt: `Escalation edge case: Which handling step is correct for ${role.name}?`,
+        prompt: `Which additional edge-case responsibility is listed for ${role.name}?`,
         answer: roleFacts.edge[1],
         explanation: `${role.name} should manage this edge case exactly through this workflow.`,
         pool: actionPools.edge,
-        seed: roleIndex * 41 + 10
+        seed: roleIndex * 41 + 10,
+        forbidden: roleFacts.edge
       })
     );
 
@@ -1134,8 +1151,8 @@ function generateNsoRoleDrillQuestions() {
       buildRoleIdentityQuestion({
         role,
         review,
-        prompt: `Communication chain check: Which NSO role most directly coordinates with ${roleFacts.partners[0]} for this area?`,
-        explanation: `${role.name} is the primary role in that communication chain.`,
+        prompt: `Role accountability check: Which NSO role is responsible for "${roleFacts.before[1]}"?`,
+        explanation: `${role.name} owns this readiness responsibility.`,
         seed: roleIndex * 41 + 16
       })
     );
@@ -1144,8 +1161,8 @@ function generateNsoRoleDrillQuestions() {
       buildRoleIdentityQuestion({
         role,
         review,
-        prompt: `Cross-functional challenge: Who is expected to coordinate with ${roleFacts.partners[1]} while executing "${roleFacts.during[1]}"?`,
-        explanation: `${role.name} combines that operational task with the listed communication partner.`,
+        prompt: `In-jam ownership check: Which NSO role should execute "${roleFacts.during[1]}"?`,
+        explanation: `${role.name} is responsible for this in-jam task.`,
         seed: roleIndex * 41 + 17
       })
     );
@@ -1164,8 +1181,8 @@ function generateNsoRoleDrillQuestions() {
       buildRoleIdentityQuestion({
         role,
         review,
-        prompt: `Crew reliability check: Which role is best positioned to apply BOTH "${roleFacts.before[0]}" and "${roleFacts.edge[0]}"?`,
-        explanation: `Both duties are core to ${role.name}.`,
+        prompt: `Rule ownership check: Which NSO role must apply "${roleFacts.must[1]}"?`,
+        explanation: `${role.name} is responsible for applying this rules/procedures requirement.`,
         seed: roleIndex * 41 + 19
       })
     );
@@ -1174,20 +1191,21 @@ function generateNsoRoleDrillQuestions() {
       buildRoleIdentityQuestion({
         role,
         review,
-        prompt: `High-difficulty role distinction: Which NSO role combines "${roleFacts.must[1]}" with partner communication to ${roleFacts.partners[2]}?`,
-        explanation: `${role.name} is the correct role match for that combined requirement.`,
+        prompt: `Edge-case ownership check: Which NSO role should handle "${roleFacts.edge[1]}"?`,
+        explanation: `${role.name} is accountable for this edge-case handling.`,
         seed: roleIndex * 41 + 20
       })
     );
 
     while (roleQuestions.length < NSO_ROLE_MIN_QUESTION_COUNT) {
       const index = roleQuestions.length;
+      const fact = identityFacts[index % identityFacts.length];
       roleQuestions.push(
         buildRoleIdentityQuestion({
           role,
           review,
-          prompt: `Advanced synthesis ${index + 1}: Which role should execute "${roleFacts.must[index % roleFacts.must.length]}" while also handling "${roleFacts.edge[index % roleFacts.edge.length]}"?`,
-          explanation: `This combined scenario still maps to ${role.name}.`,
+          prompt: `Extended role practice ${index + 1}: Which NSO role is responsible for "${fact}"?`,
+          explanation: `This responsibility maps to ${role.name}.`,
           seed: roleIndex * 41 + 21 + index
         })
       );
@@ -1199,8 +1217,17 @@ function generateNsoRoleDrillQuestions() {
   return generated;
 }
 
-function buildRoleActionQuestion({ role, review, prompt, answer, explanation, pool, seed }) {
-  const distractors = buildTextDistractors(pool, answer, seed);
+function buildRoleActionQuestion({
+  role,
+  review,
+  prompt,
+  answer,
+  explanation,
+  pool,
+  seed,
+  forbidden = []
+}) {
+  const distractors = buildTextDistractors(pool, answer, seed, forbidden);
   return {
     mode: "nso",
     prompt,
@@ -1223,8 +1250,23 @@ function buildRoleIdentityQuestion({ role, review, prompt, explanation, seed }) 
   };
 }
 
-function buildTextDistractors(pool, answer, seed) {
-  const candidates = pool.filter((item) => item !== answer);
+function buildTextDistractors(pool, answer, seed, forbidden = []) {
+  const blocked = new Set([answer, ...forbidden]);
+  let candidates = pool.filter((item) => !blocked.has(item));
+
+  // Relax constraints if needed so we can still return 3 distractors.
+  if (candidates.length < 3) {
+    const relaxed = pool.filter((item) => item !== answer);
+    for (const item of relaxed) {
+      if (!candidates.includes(item)) {
+        candidates.push(item);
+      }
+      if (candidates.length >= 3) {
+        break;
+      }
+    }
+  }
+
   if (!candidates.length) {
     return [answer, answer, answer];
   }
@@ -1295,7 +1337,8 @@ function generateRuleModuleDrillQuestions() {
         answer: moduleFacts.key[0],
         explanation: `This key rule belongs to ${module.title}.`,
         pool: factPools.key,
-        seed: moduleIndex * 53 + 1
+        seed: moduleIndex * 53 + 1,
+        forbidden: moduleFacts.key
       })
     );
 
@@ -1306,7 +1349,8 @@ function generateRuleModuleDrillQuestions() {
         answer: moduleFacts.key[1],
         explanation: `${module.title} emphasizes this rule detail as part of core knowledge.`,
         pool: factPools.key,
-        seed: moduleIndex * 53 + 2
+        seed: moduleIndex * 53 + 2,
+        forbidden: moduleFacts.key
       })
     );
 
@@ -1317,7 +1361,8 @@ function generateRuleModuleDrillQuestions() {
         answer: moduleFacts.key[2],
         explanation: `This statement is one of the core rule anchors for ${module.title}.`,
         pool: factPools.key,
-        seed: moduleIndex * 53 + 3
+        seed: moduleIndex * 53 + 3,
+        forbidden: moduleFacts.key
       })
     );
 
@@ -1328,7 +1373,8 @@ function generateRuleModuleDrillQuestions() {
         answer: moduleFacts.key[3],
         explanation: `${module.title} requires this concept under game-speed decisions.`,
         pool: factPools.key,
-        seed: moduleIndex * 53 + 4
+        seed: moduleIndex * 53 + 4,
+        forbidden: moduleFacts.key
       })
     );
 
@@ -1339,7 +1385,8 @@ function generateRuleModuleDrillQuestions() {
         answer: moduleFacts.traps[0],
         explanation: `This is a documented common trap for ${module.title}.`,
         pool: factPools.traps,
-        seed: moduleIndex * 53 + 5
+        seed: moduleIndex * 53 + 5,
+        forbidden: moduleFacts.traps
       })
     );
 
@@ -1350,7 +1397,8 @@ function generateRuleModuleDrillQuestions() {
         answer: moduleFacts.traps[1],
         explanation: `${module.title} highlights this as a recurring error pattern.`,
         pool: factPools.traps,
-        seed: moduleIndex * 53 + 6
+        seed: moduleIndex * 53 + 6,
+        forbidden: moduleFacts.traps
       })
     );
 
@@ -1361,7 +1409,8 @@ function generateRuleModuleDrillQuestions() {
         answer: moduleFacts.refs[0],
         explanation: `${moduleFacts.refs[0]} is one of the primary references for ${module.title}.`,
         pool: factPools.refs,
-        seed: moduleIndex * 53 + 7
+        seed: moduleIndex * 53 + 7,
+        forbidden: moduleFacts.refs
       })
     );
 
@@ -1372,7 +1421,8 @@ function generateRuleModuleDrillQuestions() {
         answer: moduleFacts.refs[1],
         explanation: `This module includes ${moduleFacts.refs[1]} as a direct source anchor.`,
         pool: factPools.refs,
-        seed: moduleIndex * 53 + 8
+        seed: moduleIndex * 53 + 8,
+        forbidden: moduleFacts.refs
       })
     );
 
@@ -1383,7 +1433,8 @@ function generateRuleModuleDrillQuestions() {
         answer: moduleFacts.refs[2],
         explanation: `${moduleFacts.refs[2]} is explicitly listed for ${module.title}.`,
         pool: factPools.refs,
-        seed: moduleIndex * 53 + 9
+        seed: moduleIndex * 53 + 9,
+        forbidden: moduleFacts.refs
       })
     );
 
@@ -1394,7 +1445,8 @@ function generateRuleModuleDrillQuestions() {
         answer: moduleFacts.refs[3],
         explanation: `${moduleFacts.refs[3]} remains in scope for this module.`,
         pool: factPools.refs,
-        seed: moduleIndex * 53 + 10
+        seed: moduleIndex * 53 + 10,
+        forbidden: moduleFacts.refs
       })
     );
 
@@ -1452,8 +1504,8 @@ function generateRuleModuleDrillQuestions() {
       buildRuleModuleIdentityQuestion({
         module,
         review,
-        prompt: `Reference-to-module mapping: "${moduleFacts.refs[0]}" belongs to which study module?`,
-        explanation: `This reference is part of ${module.title}.`,
+        prompt: `Module mapping check: Which module includes this key rule point: "${moduleFacts.key[2]}"`,
+        explanation: `This key rule point belongs to ${module.title}.`,
         seed: moduleIndex * 53 + 16
       })
     );
@@ -1462,8 +1514,8 @@ function generateRuleModuleDrillQuestions() {
       buildRuleModuleIdentityQuestion({
         module,
         review,
-        prompt: `Rules source mapping: "${moduleFacts.refs[1]}" is directly linked to which module?`,
-        explanation: `${module.title} includes this source in its references.`,
+        prompt: `Trap mapping check: Which module warns against this mistake: "${moduleFacts.traps[2]}"`,
+        explanation: `This common mistake is listed under ${module.title}.`,
         seed: moduleIndex * 53 + 17
       })
     );
@@ -1475,7 +1527,8 @@ function generateRuleModuleDrillQuestions() {
         answer: moduleFacts.key[2],
         explanation: `This is an in-scope rule control point for ${module.title}.`,
         pool: factPools.key,
-        seed: moduleIndex * 53 + 18
+        seed: moduleIndex * 53 + 18,
+        forbidden: moduleFacts.key
       })
     );
 
@@ -1486,7 +1539,8 @@ function generateRuleModuleDrillQuestions() {
         answer: moduleFacts.traps[2],
         explanation: `${module.title} includes this trap in review/correction work.`,
         pool: factPools.traps,
-        seed: moduleIndex * 53 + 19
+        seed: moduleIndex * 53 + 19,
+        forbidden: moduleFacts.traps
       })
     );
 
@@ -1509,7 +1563,8 @@ function generateRuleModuleDrillQuestions() {
           answer: moduleFacts.key[index % moduleFacts.key.length],
           explanation: `This statement belongs to ${module.title}.`,
           pool: factPools.key,
-          seed: moduleIndex * 53 + 21 + index
+          seed: moduleIndex * 53 + 21 + index,
+          forbidden: moduleFacts.key
         })
       );
     }
@@ -1520,8 +1575,16 @@ function generateRuleModuleDrillQuestions() {
   return generated;
 }
 
-function buildRuleFactQuestion({ review, prompt, answer, explanation, pool, seed }) {
-  const distractors = buildTextDistractors(pool, answer, seed);
+function buildRuleFactQuestion({
+  review,
+  prompt,
+  answer,
+  explanation,
+  pool,
+  seed,
+  forbidden = []
+}) {
+  const distractors = buildTextDistractors(pool, answer, seed, forbidden);
   return {
     mode: "rules",
     prompt,
