@@ -537,24 +537,6 @@ const refSignals = [
     reference: "Cues/Codes/Signals: Multiple Penalties"
   },
   {
-    id: "stand",
-    name: "Stand",
-    category: "box",
-    meaning: "Penalty-box timer cue with 10 seconds remaining in served penalty time.",
-    whenUsed: "At exactly 10 seconds remaining of a legal 30-second penalty service.",
-    cueWords: "Stand",
-    reference: "Rules 4.4.1 / Cues/Codes/Signals"
-  },
-  {
-    id: "done",
-    name: "Done",
-    category: "box",
-    meaning: "Penalty service complete and skater may legally leave if release conditions are met.",
-    whenUsed: "At completion of served penalty time and legal release state.",
-    cueWords: "Done",
-    reference: "Cues/Codes/Signals"
-  },
-  {
     id: "lead",
     name: "Lead Jammer",
     category: "jammer",
@@ -642,15 +624,6 @@ const refSignals = [
     meaning: "Officials have stopped game timing.",
     whenUsed: "Official stoppages, injury handling, correction windows.",
     cueWords: "Time Stopped",
-    reference: "Cues/Codes/Signals"
-  },
-  {
-    id: "five-seconds",
-    name: "Five Seconds",
-    category: "timing",
-    meaning: "Five-second warning before restart/end condition.",
-    whenUsed: "Given before certain restart events.",
-    cueWords: "Five Seconds",
     reference: "Cues/Codes/Signals"
   },
   {
@@ -874,13 +847,13 @@ const baseDrillQuestions = [
     review: { tab: "rules", id: "lineups-roles", label: "Lineups and Roles" }
   },
   {
-    mode: "signals",
-    prompt: "Which signal tells a penalized skater they are in the final 10 seconds of service?",
-    options: ["Done", "Stand", "Official Timeout", "Show the Star"],
+    mode: "nso",
+    prompt: "What is the correct penalty-box timer cue at 20 seconds served on a standard 30-second penalty?",
+    options: ["Stand", "Done", "No Pack", "Official Timeout"],
     answer: "Stand",
     explanation:
-      "Box timing flow uses stand at 10 seconds remaining, then done at completion if release is legal.",
-    review: { tab: "signals", id: "stand", label: "Stand Signal" }
+      "Penalty box timing uses the stand cue at 20 seconds served (10 seconds remaining) in standard service flow.",
+    review: { tab: "nso", id: "penalty-box-timer", label: "Penalty Box Timer" }
   },
   {
     mode: "signals",
@@ -1768,7 +1741,7 @@ const jamSimulations = [
         answer: "Stand",
         explanation:
           "At 10 seconds remaining, the skater is instructed to stand. This is the standard 30-second service flow.",
-        review: { tab: "signals", id: "stand", label: "Stand Signal" }
+        review: { tab: "nso", id: "penalty-box-timer", label: "Penalty Box Timer" }
       },
       {
         type: "context",
@@ -1804,7 +1777,7 @@ const jamSimulations = [
         options: ["Done", "Stand", "Pack Is Here", "Out of Play"],
         answer: "Done",
         explanation: "Use done at legal completion of served penalty time and release conditions.",
-        review: { tab: "signals", id: "done", label: "Done Signal" }
+        review: { tab: "nso", id: "penalty-box-timer", label: "Penalty Box Timer" }
       },
       {
         type: "context",
@@ -3030,129 +3003,28 @@ function getSignalVisual(signal) {
   const penaltyCode = SIGNAL_PENALTY_CODES[signal.id];
   if (penaltyCode) {
     return {
-      svg: buildPenaltySignalSvg(signal.id, penaltyCode),
-      caption: `${signal.name}: penalty call visual shorthand`,
-      note: "Stylized training image (official crop not available in provided sheet)."
+      html: buildSignalReferenceCard(signal, `Penalty code: ${penaltyCode}`),
+      caption: `${signal.name}: text reference`,
+      note: "Official image not loaded in this course package; showing text reference to avoid inaccurate drawings."
     };
   }
 
-  switch (signal.id) {
-    case "report-box":
-      return {
-        svg: buildBoxSignalSvg("REPORT", "Penalty to box"),
-        caption: "Skater has been penalized and must report to the box."
-      };
-    case "multiple-penalties":
-      return {
-        svg: buildBoxSignalSvg("2X", "Multiple penalties"),
-        caption: "Used when more than one penalty is assessed."
-      };
-    case "stand":
-      return {
-        svg: buildBoxSignalSvg("STAND", "10 seconds left"),
-        caption: "Cue at 10 seconds remaining in standard penalty service."
-      };
-    case "done":
-      return {
-        svg: buildBoxSignalSvg("DONE", "Legal release"),
-        caption: "Penalty time complete and skater may leave if legal conditions are met."
-      };
-    case "lead":
-      return {
-        svg: buildJammerSignalSvg("lead"),
-        caption: "Lead jammer status and call-off authority."
-      };
-    case "not-lead":
-      return {
-        svg: buildJammerSignalSvg("not-lead"),
-        caption: "Jammer is no longer eligible for lead."
-      };
-    case "star-pass-complete":
-      return {
-        svg: buildJammerSignalSvg("star-pass-complete"),
-        caption: "Star pass is complete and jammer identity transfers."
-      };
-    case "no-earned-pass":
-      return {
-        svg: buildJammerSignalSvg("no-earned-pass"),
-        caption: "Pass status not earned for scoring progression."
-      };
-    case "show-star":
-      return {
-        svg: buildJammerSignalSvg("show-star"),
-        caption: "Jammer or pivot must display star cover clearly."
-      };
-    case "no-pack":
-      return {
-        svg: buildPackSignalSvg("no-pack"),
-        caption: "No legal pack currently exists."
-      };
-    case "out-of-play":
-      return {
-        svg: buildPackSignalSvg("out-of-play"),
-        caption: "Skater is outside legal engagement position."
-      };
-    case "pack-is-here":
-      return {
-        svg: buildPackSignalSvg("pack-is-here"),
-        caption: "Ref indicates current legal pack location."
-      };
-    case "false-start":
-      return {
-        svg: buildPackSignalSvg("false-start"),
-        caption: "Skater moved illegally before jam start."
-      };
-    case "time-stopped":
-      return {
-        svg: buildTimingSignalSvg("time-stopped"),
-        caption: "Officials have stopped game timing."
-      };
-    case "five-seconds":
-      return {
-        svg: buildTimingSignalSvg("five-seconds"),
-        caption: "Five-second warning signal."
-      };
-    case "team-timeout":
-      return {
-        svg: buildTimingSignalSvg("team-timeout"),
-        caption: "Team-requested timeout."
-      };
-    case "official-timeout":
-      return {
-        svg: buildTimingSignalSvg("official-timeout"),
-        caption: "Officials-initiated timeout."
-      };
-    case "official-review":
-      return {
-        svg: buildTimingSignalSvg("official-review"),
-        caption: "Team is using official review rights."
-      };
-    case "jam-start":
-      return {
-        svg: buildTimingSignalSvg("jam-start"),
-        caption: "Jam start communication."
-      };
-    case "jam-ending":
-      return {
-        svg: buildTimingSignalSvg("jam-ending"),
-        caption: "Jam ending or call-off communication."
-      };
-    case "go-to-bench":
-      return {
-        svg: buildMovementSignalSvg("go-to-bench"),
-        caption: "Skater is directed toward team bench area."
-      };
-    case "return-track":
-      return {
-        svg: buildMovementSignalSvg("return-track"),
-        caption: "Skater is instructed to return legally to track."
-      };
-    default:
-      return {
-        svg: buildGenericSignalSvg(signal.name),
-        caption: "General signal visual."
-      };
-  }
+  return {
+    html: buildSignalReferenceCard(signal),
+    caption: `${signal.name}: text reference`,
+    note: "Official image not loaded in this course package; showing text reference to avoid inaccurate drawings."
+  };
+}
+
+function buildSignalReferenceCard(signal, badge = "") {
+  return `
+    <div class="signal-fallback-card" role="img" aria-label="${escapeHtml(signal.name)} reference card">
+      <p class="signal-fallback-title">${escapeHtml(signal.name)}</p>
+      ${badge ? `<p class="signal-fallback-badge">${escapeHtml(badge)}</p>` : ""}
+      <p class="signal-fallback-line"><strong>Meaning:</strong> ${escapeHtml(signal.meaning)}</p>
+      <p class="signal-fallback-line"><strong>Cue:</strong> ${escapeHtml(signal.cueWords)}</p>
+    </div>
+  `;
 }
 
 function buildPenaltySignalSvg(signalId, code) {

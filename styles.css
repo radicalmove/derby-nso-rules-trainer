@@ -560,6 +560,35 @@ main {
   color: #64748b;
 }
 
+.signal-fallback-card {
+  border: 1px dashed #94a3b8;
+  border-radius: 0.55rem;
+  padding: 0.75rem;
+  background: #f8fafc;
+}
+
+.signal-fallback-title {
+  margin: 0;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.signal-fallback-badge {
+  margin: 0.35rem 0 0.25rem;
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #334155;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.signal-fallback-line {
+  margin: 0.45rem 0 0;
+  color: #1e293b;
+}
+
 .sim-kicker {
   text-transform: uppercase;
   font-size: 0.74rem;
