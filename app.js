@@ -348,14 +348,15 @@ const ruleModules = [
     title: "Penalty Box and Penalty Enforcement",
     summary: "Know serving time, stand/release timing, and jammer special cases.",
     keyPoints: [
-      "Standard penalty duration is 30 seconds of jam time (Rule 4.4.1).",
-      "Skater stands for final 10 seconds; box timer cues stand with 10 seconds remaining.",
-      "Jammer penalties can cancel/overlap with immediate-release or carryover outcomes (Rule 4.4.2).",
-      "Blocker queue order matters when seats are full (Rule 4.4.3)."
+      "Standard penalty duration is 30 seconds of jam time (Rule 4.4.1), e.g., sit at 0:24 and reach done at 0:54.",
+      "Skater stands for final 10 seconds; cue stand at 20 seconds served, e.g., sit at 0:24 and stand at 0:44.",
+      "Jammer overlap decisions use exact served time at seat moment, e.g., first jammer served 23 seconds when second jammer sits (Rule 4.4.2).",
+      "Blocker queue order is set by physical entry order with timestamped tracking when seats are full (Rule 4.4.3)."
     ],
     commonTraps: [
-      "Counting period time instead of jam time.",
-      "Missing special jammer interactions when second jammer reports while the first is serving."
+      "Counting period clock instead of jam clock when computing remaining penalty seconds.",
+      "Calling done at 30 elapsed seconds even when the skater is not upright at release moment.",
+      "Ignoring timestamp order when assigning full-seat blocker queue priority."
     ],
     ruleRefs: ["Rules 4.4.1", "Rules 4.4.2", "Rules 4.4.3", "Officiating Procedures 7.x"]
   },
@@ -775,7 +776,8 @@ const baseDrillQuestions = [
   },
   {
     mode: "nso",
-    prompt: "When blocker penalty seats are full, what determines queue priority for blockers?",
+    prompt:
+      "Blockers sit at 0:18, 0:22, and 0:27 filling all seats. A fourth blocker reports at 0:31. What determines who is first in the waiting queue?",
     options: [
       "Alphabetical skater number",
       "Coach request",
@@ -806,15 +808,17 @@ const baseDrillQuestions = [
   },
   {
     mode: "rules",
-    prompt: "Which statement about penalties is correct?",
+    prompt:
+      "A skater sits for a penalty at 0:40 and the jam ends at 1:00. How much penalty time did that skater actually serve?",
     options: [
-      "Penalties run 30 seconds of period time.",
-      "Penalties run 30 seconds of jam time.",
-      "Penalties are always full-interval with no stand cue.",
-      "Only blockers serve 30-second penalties."
+      "20 seconds of jam time",
+      "30 seconds because period time keeps running",
+      "60 seconds because the period crossed a minute boundary",
+      "0 seconds because service only counts next jam"
     ],
-    answer: "Penalties run 30 seconds of jam time.",
-    explanation: "Rule 4.4.1 defines 30 seconds of jam time for standard penalties.",
+    answer: "20 seconds of jam time",
+    explanation:
+      "Rule 4.4.1 uses jam time for service. From 0:40 to 1:00, the skater served 20 seconds and still owes 10.",
     review: { tab: "rules", id: "penalty-enforcement", label: "Penalty Enforcement" }
   },
   {
@@ -902,16 +906,17 @@ const baseDrillQuestions = [
   },
   {
     mode: "mixed",
-    prompt: "When one jammer is serving a penalty and the opposing jammer sits in the box, what can happen under jammer penalty overlap rules?",
+    prompt:
+      "Blue jammer sat at 0:24 and Red jammer sits at 0:47. Blue has served 23 seconds. Under jammer overlap rules, what is the correct immediate result?",
     options: [
-      "Serving jammer may be released immediately depending on entry timing context",
-      "Both jammers always serve full independent 30 seconds",
-      "Only the second jammer serves",
-      "Both jammers are expelled"
+      "Blue is released immediately and Red now serves a 23-second matched segment",
+      "Blue stays seated to 30 seconds and Red starts a full new 30-second count",
+      "Both jammers remain seated until the jam ends",
+      "Red is released immediately because Red sat second"
     ],
-    answer: "Serving jammer may be released immediately depending on entry timing context",
+    answer: "Blue is released immediately and Red now serves a 23-second matched segment",
     explanation:
-      "Rule 4.4.2 defines several jammer overlap outcomes, including immediate release and next-jam carryover cases.",
+      "Rule 4.4.2 overlap handling uses the exact served time. Red entering at 0:47 releases Blue and Red owes the matched 23-second segment.",
     review: { tab: "rules", id: "penalty-enforcement", label: "Penalty Enforcement" }
   },
   {
@@ -1336,6 +1341,11 @@ function generateRuleModuleDrillQuestions() {
 
   ruleModules.forEach((module, moduleIndex) => {
     const review = { tab: "rules", id: module.id, label: module.title };
+    if (module.id === "penalty-enforcement") {
+      generated.push(...buildPenaltyEnforcementDrillQuestions(review));
+      return;
+    }
+
     const moduleFacts = normalizeRuleModuleFacts(module);
     const moduleQuestions = [];
 
@@ -1584,6 +1594,220 @@ function generateRuleModuleDrillQuestions() {
   return generated;
 }
 
+function buildPenaltyEnforcementDrillQuestions(review) {
+  const questionTemplates = [
+    {
+      prompt:
+        "A skater sits at 0:11 on the jam clock. What cue is required at 0:31 if service is uninterrupted?",
+      options: ["Stand", "Done", "No Pack", "Official Timeout"],
+      answer: "Stand",
+      explanation:
+        "At 0:31 the skater has served 20 seconds, so the final 10-second standing phase starts."
+    },
+    {
+      prompt:
+        "A skater sits at 0:11 and is fully upright when required. What cue is correct at 0:41?",
+      options: ["Done", "Stand", "Team Timeout", "Cut"],
+      answer: "Done",
+      explanation:
+        "From 0:11 to 0:41 is 30 seconds of jam time, so done is correct if release conditions are met."
+    },
+    {
+      prompt:
+        "A skater sits at 0:11, and the jam ends at 0:29. How much penalty time remains?",
+      options: ["12 seconds", "10 seconds", "18 seconds", "1 second"],
+      answer: "12 seconds",
+      explanation:
+        "The skater served 18 seconds (0:11 to 0:29), leaving 12 seconds of the 30-second penalty."
+    },
+    {
+      prompt:
+        "A skater has 12 seconds remaining at jam end. If the next jam starts at period clock 7:00, when is done called?",
+      options: [
+        "At 6:48 after 12 seconds of jam time",
+        "At 6:50 after a full 10-second stand",
+        "Immediately at 7:00",
+        "At the next jam-ending whistle"
+      ],
+      answer: "At 6:48 after 12 seconds of jam time",
+      explanation:
+        "Remaining time is exact. The skater is released when the remaining 12 jam-time seconds are completed."
+    },
+    {
+      prompt:
+        "Blue jammer sits at 0:24. Red jammer sits at 0:47. Blue has served 23 seconds. What is the immediate overlap result?",
+      options: [
+        "Blue is released and Red serves a 23-second matched segment",
+        "Blue and Red both reset to full 30-second penalties",
+        "Red is released because Red sat second",
+        "Both remain seated until jam end"
+      ],
+      answer: "Blue is released and Red serves a 23-second matched segment",
+      explanation:
+        "Under the overlap workflow, the served-time match is 23 seconds at the seat moment in this example."
+    },
+    {
+      prompt:
+        "In that same overlap example, Red serves from 0:47 until jam end at 1:03. How many seconds remain?",
+      options: ["7 seconds", "3 seconds", "10 seconds", "14 seconds"],
+      answer: "7 seconds",
+      explanation:
+        "Red served 16 seconds (0:47 to 1:03) out of the 23-second matched segment, leaving 7."
+    },
+    {
+      prompt:
+        "Red owes 7 seconds at jam end. If the next jam-starting whistle is at period clock 2:00, when is done called?",
+      options: [
+        "At 1:53 after 7 seconds of jam time",
+        "At 1:50 after a full stand interval",
+        "Immediately at 2:00",
+        "At the next timeout only"
+      ],
+      answer: "At 1:53 after 7 seconds of jam time",
+      explanation: "The remaining 7 seconds are served from the next jam-starting whistle."
+    },
+    {
+      prompt:
+        "Blocker seats are filled by arrivals at 0:12, 0:18, and 0:24. A fourth blocker reports at 0:30. Who is first in queue?",
+      options: [
+        "The blocker who reported at 0:30",
+        "The blocker with the highest jersey number",
+        "Whichever team is trailing",
+        "No queue exists until jam end"
+      ],
+      answer: "The blocker who reported at 0:30",
+      explanation: "When seats are full, waiting order follows physical entry order into the box area."
+    },
+    {
+      prompt:
+        "If the 0:12 blocker's seat opens at 0:42, who gets seated into that opening?",
+      options: [
+        "The first waiting blocker in queue order",
+        "Any blocker chosen by the penalty box manager",
+        "The most recent blocker to arrive",
+        "No one until the next jam"
+      ],
+      answer: "The first waiting blocker in queue order",
+      explanation: "Seat assignment follows queue order, not team preference or recency."
+    },
+    {
+      prompt:
+        "At exactly 20 seconds served, the timer calls stand but the skater remains on one knee. What is the correct release handling?",
+      options: [
+        "Keep serving; do not release until the skater is upright when time is complete",
+        "Call done anyway because 30 seconds always auto-release",
+        "Reset the full 30-second penalty",
+        "Issue a second penalty automatically"
+      ],
+      answer: "Keep serving; do not release until the skater is upright when time is complete",
+      explanation:
+        "The stand phase requires upright posture. Release is not correct while the skater is not upright."
+    },
+    {
+      prompt:
+        "A skater sits at 0:52. At what jam time does the stand cue occur in uninterrupted service?",
+      options: ["1:12", "1:22", "1:02", "1:32"],
+      answer: "1:12",
+      explanation: "Stand is called after 20 seconds served: 0:52 + 0:20 = 1:12."
+    },
+    {
+      prompt: "Two standard penalties are assessed to the same skater in one jam. How much total jam-time service is owed?",
+      options: ["60 seconds", "30 seconds", "45 seconds", "90 seconds"],
+      answer: "60 seconds",
+      explanation: "Each standard penalty is 30 seconds of jam time, so two penalties total 60 seconds."
+    },
+    {
+      prompt:
+        "For the first segment of a two-penalty service that began at 0:08, when should stand be called?",
+      options: ["0:28", "0:38", "0:18", "0:48"],
+      answer: "0:28",
+      explanation: "The first stand cue is at 20 seconds served into the first 30-second segment."
+    },
+    {
+      prompt:
+        "If the first 30-second segment started at 0:08 and ends at 0:38, when is stand for the second segment?",
+      options: ["0:58", "0:48", "1:08", "1:18"],
+      answer: "0:58",
+      explanation: "The second segment starts at 0:38, so stand occurs 20 seconds later at 0:58."
+    },
+    {
+      prompt:
+        "In that same two-segment example, if uninterrupted, when is final done for the second segment?",
+      options: ["1:08", "0:58", "1:18", "0:48"],
+      answer: "1:08",
+      explanation: "Second segment is 30 seconds from 0:38 to 1:08."
+    },
+    {
+      prompt:
+        "Second segment starts at 0:38, but the jam ends at 0:54. How much of that second segment remains?",
+      options: ["14 seconds", "16 seconds", "10 seconds", "6 seconds"],
+      answer: "14 seconds",
+      explanation: "The skater served 16 seconds of segment two (0:38 to 0:54), leaving 14 seconds."
+    },
+    {
+      prompt:
+        "A skater has 14 seconds left to serve at jam end. If the next jam starts at period clock 10:00, when is done called?",
+      options: [
+        "At 9:46 after 14 seconds of jam time",
+        "At 9:50 after a fresh 10-second stand",
+        "Immediately at 10:00",
+        "At the next period break"
+      ],
+      answer: "At 9:46 after 14 seconds of jam time",
+      explanation: "Carryover time is exact and begins counting at the next jam-starting whistle."
+    },
+    {
+      prompt:
+        "A jammer has 7 seconds remaining at next jam start. The jam is called off after 4 seconds. How much remains?",
+      options: ["3 seconds", "7 seconds", "0 seconds", "11 seconds"],
+      answer: "3 seconds",
+      explanation: "Only jam time counts. Four served leaves three seconds still owed."
+    },
+    {
+      prompt:
+        "A skater sits at 1:15 and the jam ends at 1:40. How many seconds were served in that jam?",
+      options: ["25 seconds", "30 seconds", "15 seconds", "5 seconds"],
+      answer: "25 seconds",
+      explanation: "From 1:15 to 1:40 is 25 seconds of jam time served."
+    },
+    {
+      prompt:
+        "That skater has 5 seconds remaining at jam end. If the next jam starts at period clock 5:30, when is done called?",
+      options: [
+        "At 5:25 after 5 seconds of jam time",
+        "At 5:20 after mandatory stand time",
+        "Immediately at 5:30",
+        "At next whistle stoppage"
+      ],
+      answer: "At 5:25 after 5 seconds of jam time",
+      explanation: "Remaining penalty time is completed directly from next jam start."
+    },
+    {
+      prompt:
+        "Blue jammer sits at 0:30, and Red jammer sits at 0:42. Blue has served 12 seconds. What matched segment is tracked in this overlap example?",
+      options: ["12 seconds", "18 seconds", "20 seconds", "30 seconds"],
+      answer: "12 seconds",
+      explanation: "The overlap example uses the exact served time when the second jammer sits: 12 seconds."
+    },
+    {
+      prompt:
+        "Red begins serving that 12-second matched segment at 0:42, but jam ends at 0:49. How much remains?",
+      options: ["5 seconds", "3 seconds", "7 seconds", "12 seconds"],
+      answer: "5 seconds",
+      explanation: "Red served 7 seconds (0:42 to 0:49), so 5 seconds carry over."
+    }
+  ];
+
+  return questionTemplates.map((template, index) => ({
+    mode: "rules",
+    prompt: template.prompt,
+    options: shuffle([...template.options], index + 700),
+    answer: template.answer,
+    explanation: template.explanation,
+    review
+  }));
+}
+
 function buildRuleFactQuestion({
   review,
   prompt,
@@ -1712,9 +1936,9 @@ const jamSimulations = [
     overview:
       "You are working the penalty box crew during an active jam. Step through the timeline and make each decision at the correct moment.",
     objectives: [
-      "Apply 30-second jam-time penalty timing with stand/done cues.",
-      "Handle a second jammer entering while another jammer is already serving.",
-      "Carry remaining jammer penalty time into the next jam correctly."
+      "Apply 30-second jam-time penalty timing with exact stand/done second marks.",
+      "Calculate jammer overlap using exact served time when the second jammer sits.",
+      "Carry precise remaining jammer time into the next jam correctly."
     ],
     references: ["Rules 4.4.1", "Rules 4.4.2", "Officiating Procedures 7.4-7.5"],
     events: [
@@ -1729,18 +1953,19 @@ const jamSimulations = [
         time: "0:24",
         title: "Blue jammer penalized",
         narrative:
-          "Blue jammer reports legally to the box and sits. Jammer penalty timing starts."
+          "Blue jammer reports legally and sits at 0:24. Their 30-second jam-time penalty clock starts at that moment."
       },
       {
         type: "decision",
         time: "0:44",
-        title: "20 seconds served",
-        narrative: "Blue jammer has now served 20 seconds of the 30-second penalty.",
-        question: "What should the timer cue now?",
+        title: "20-second cue",
+        narrative:
+          "Blue has served exactly 20 seconds (0:24 to 0:44), leaving 10 seconds on this penalty segment.",
+        question: "What verbal cue is required at this exact moment?",
         options: ["Stand", "Done", "Official Timeout", "No Pack"],
         answer: "Stand",
         explanation:
-          "At 10 seconds remaining, the skater is instructed to stand. This is the standard 30-second service flow.",
+          "Rule 4.4.1: the final 10 seconds must be served while standing, so the stand cue occurs at 20 seconds served.",
         review: { tab: "nso", id: "penalty-box-timer", label: "Penalty Box Timer" }
       },
       {
@@ -1748,48 +1973,37 @@ const jamSimulations = [
         time: "0:47",
         title: "Second jammer arrives",
         narrative:
-          "Red jammer is now penalized and sits while blue jammer is still serving. Jammer overlap rules are active."
+          "Red jammer is penalized and sits at 0:47 while Blue is still serving. Blue has served 23 seconds when Red sits."
       },
       {
         type: "decision",
         time: "0:47",
-        title: "Immediate box decision",
-        narrative: "You must apply jammer overlap logic right away.",
+        title: "Overlap math at seat time",
+        narrative: "Apply Rule 4.4.2 immediately using the exact time Blue has already served.",
         question: "What is the correct crew action?",
         options: [
-          "Apply jammer-overlap logic and determine immediate release vs hold based on legal timing state",
-          "Always keep both jammers for full independent 30 seconds",
-          "Release the second jammer first because they sat last",
-          "Ignore overlap until jam end"
+          "Release Blue immediately and set Red to serve a 23-second segment for this penalty",
+          "Keep Blue seated to 30 seconds, then start Red on a full 30 seconds",
+          "Release both jammers immediately because both are now in the box",
+          "Reset both jammers and start each on a new 30-second count"
         ],
-        answer:
-          "Apply jammer-overlap logic and determine immediate release vs hold based on legal timing state",
+        answer: "Release Blue immediately and set Red to serve a 23-second segment for this penalty",
         explanation:
-          "Jammer overlap has specific outcomes under Rule 4.4.2. The crew must actively apply those conditions, not default to independent full service.",
+          "Rule 4.4.2 requires equivalent penalty time per penalty and, when possible, a jammer not serving. Red sitting at 0:47 releases Blue and Red now owes the 23-second matched segment.",
         review: { tab: "rules", id: "penalty-enforcement", label: "Penalty Enforcement" }
-      },
-      {
-        type: "decision",
-        time: "0:54",
-        title: "Legal release moment",
-        narrative: "Blue jammer reaches legal release completion while release conditions are met.",
-        question: "What cue is used to release the skater?",
-        options: ["Done", "Stand", "Pack Is Here", "Out of Play"],
-        answer: "Done",
-        explanation: "Use done at legal completion of served penalty time and release conditions.",
-        review: { tab: "nso", id: "penalty-box-timer", label: "Penalty Box Timer" }
       },
       {
         type: "context",
         time: "1:03",
         title: "Jam ends",
-        narrative: "Jam ends while red jammer still has remaining penalty time."
+        narrative:
+          "The jam ends at 1:03. Red has served 16 seconds of the required 23 (from 0:47 to 1:03), leaving 7 seconds."
       },
       {
         type: "decision",
         time: "1:03",
         title: "Next jam start position",
-        narrative: "Penalty time is not fully served at jam end.",
+        narrative: "Red still owes 7 seconds when the jam-ending whistle sounds.",
         question: "Where does the red jammer start the next jam?",
         options: [
           "Seated in the penalty box to continue serving",
@@ -1799,7 +2013,25 @@ const jamSimulations = [
         ],
         answer: "Seated in the penalty box to continue serving",
         explanation:
-          "Unserved jammer penalty time carries into the next jam start under penalty service rules.",
+          "Penalty time only counts during jams. Red resumes in the box at the next jam-start whistle with 7 seconds still owed.",
+        review: { tab: "rules", id: "penalty-enforcement", label: "Penalty Enforcement" }
+      },
+      {
+        type: "decision",
+        time: "Next Jam 0:00",
+        title: "Final 7-second release",
+        narrative:
+          "Next jam starts and Red resumes with only 7 seconds remaining, which is entirely within the final standing portion.",
+        question: "If the jam-starting whistle is at 2:00 on the period clock, when should the box timer call done?",
+        options: [
+          "At 2:07, after 7 seconds of jam time",
+          "At 2:10, after a full standing count",
+          "Immediately at 2:00",
+          "At the next jam-ending whistle regardless of elapsed time"
+        ],
+        answer: "At 2:07, after 7 seconds of jam time",
+        explanation:
+          "Red owes exactly 7 more seconds. The timer calls done when that 7-second remainder expires, not a new 10- or 30-second segment.",
         review: { tab: "rules", id: "penalty-enforcement", label: "Penalty Enforcement" }
       }
     ]
@@ -1811,8 +2043,8 @@ const jamSimulations = [
     overview:
       "Track a fast-moving pack sequence where officials need to communicate legal engagement status clearly.",
     objectives: [
-      "Identify correct no-pack and out-of-play communication.",
-      "Distinguish warnings from penalties in pack breakdown moments.",
+      "Identify correct no-pack and out-of-play communication on exact timeline marks.",
+      "Apply engagement-zone distance limits with concrete measurements.",
       "Reinforce which referee positions own pack definition coverage."
     ],
     references: ["Rules 2.3", "Rules 2.5", "Cues/Codes/Signals: No Pack/Out of Play"],
@@ -1828,7 +2060,7 @@ const jamSimulations = [
         type: "decision",
         time: "0:03",
         title: "Primary communication",
-        narrative: "Skaters need immediate orientation to legal pack status.",
+        narrative: "Three seconds into the split, skaters need immediate orientation to legal pack status.",
         question: "Which call should refs communicate first?",
         options: ["No Pack", "Lead Jammer", "Team Timeout", "Done"],
         answer: "No Pack",
@@ -1841,13 +2073,26 @@ const jamSimulations = [
         time: "0:06",
         title: "Illegal engagement risk",
         narrative:
-          "A blocker continues to engage well outside legal engagement distance after repeated warnings."
+          "A blocker keeps initiating contact while 25 feet behind the rear of the re-forming pack after repeated warnings."
       },
       {
         type: "decision",
         time: "0:07",
+        title: "Distance check",
+        narrative:
+          "The engagement zone is measured as 20 feet from the pack boundaries, but this blocker is 25 feet behind.",
+        question: "How far outside the legal engagement zone is this blocker?",
+        options: ["5 feet", "10 feet", "15 feet", "20 feet"],
+        answer: "5 feet",
+        explanation:
+          "Engagement extends 20 feet. At 25 feet behind the pack, the blocker is 5 feet outside legal engagement distance.",
+        review: { tab: "rules", id: "pack-engagement", label: "Pack and Engagement Zone" }
+      },
+      {
+        type: "decision",
+        time: "0:08",
         title: "Likely penalty direction",
-        narrative: "The blocker keeps engaging illegally far out of play.",
+        narrative: "Illegal engagement continues after warnings while still outside the 20-foot zone.",
         question: "What rules area is most relevant to this penalty decision?",
         options: [
           "Out-of-play / engagement zone enforcement",
@@ -1876,7 +2121,8 @@ const jamSimulations = [
         type: "context",
         time: "0:16",
         title: "Pack reforms",
-        narrative: "Blockers re-form legal proximity and engagement control stabilizes."
+        narrative:
+          "At 0:16, blockers re-form a legal largest in-proximity group, restoring pack definition and standard engagement reference."
       }
     ]
   },
@@ -1887,9 +2133,9 @@ const jamSimulations = [
     overview:
       "Run a jam where lead is established and a later star pass requires coordinated signaling and paperwork updates.",
     objectives: [
-      "Signal lead jammer status correctly.",
-      "Apply star pass communication and identity updates.",
-      "Reinforce no-points-on-initial-trip scoring logic."
+      "Signal lead jammer status at the correct moment in the jam timeline.",
+      "Apply star pass communication and identity updates with immediate paperwork timing.",
+      "Reinforce no-points-on-initial-trip scoring logic using exact timing examples."
     ],
     references: ["Rules 3.1", "Rules 3.4", "Cues/Codes/Signals: Lead / Star Pass Complete"],
     events: [
@@ -1900,10 +2146,18 @@ const jamSimulations = [
         narrative: "Both jammers begin initial trips with full pack engagement."
       },
       {
+        type: "context",
+        time: "0:14",
+        title: "Initial trip completed",
+        narrative:
+          "Blue jammer exits the initial trip at 0:14. Any legal passes after this point can earn points."
+      },
+      {
         type: "decision",
         time: "0:18",
         title: "Lead status awarded",
-        narrative: "Blue jammer legally completes requirements for lead eligibility.",
+        narrative:
+          "At 0:18, Blue has already completed initial and is the first jammer to do so legally without penalties.",
         question: "Which signal confirms call-off authority for that jammer?",
         options: ["Lead Jammer", "Not Lead", "Time Stopped", "No Earned Pass"],
         answer: "Lead Jammer",
@@ -1916,13 +2170,14 @@ const jamSimulations = [
         time: "0:46",
         title: "Star pass in progress",
         narrative:
-          "Blue jammer transfers the star to pivot under legal conditions and the transfer completes."
+          "Blue jammer begins legal star transfer to the pivot at 0:46; jammer identity changes once transfer completes."
       },
       {
         type: "decision",
         time: "0:47",
         title: "Transfer confirmation",
-        narrative: "Officials must communicate that jammer identity has changed.",
+        narrative:
+          "At 0:47 the transfer is legally completed and all officials must update jammer identity immediately.",
         question: "Which signal marks legal completion of the star transfer?",
         options: ["Star Pass Complete", "No Pack", "Team Timeout", "Done"],
         answer: "Star Pass Complete",
@@ -1934,7 +2189,8 @@ const jamSimulations = [
         type: "decision",
         time: "0:50",
         title: "Paperwork sync",
-        narrative: "NSOs must update records immediately so points are attributed correctly.",
+        narrative:
+          "Three seconds after the transfer, NSOs must already have identity updates logged so scoring attribution stays accurate.",
         question: "Which NSO role is most focused on capturing this jammer identity change by jam?",
         options: ["Lineup Tracker", "Jam Timer", "Penalty Box Timer", "Inside Whiteboard Operator"],
         answer: "Lineup Tracker",
@@ -1946,17 +2202,493 @@ const jamSimulations = [
         type: "decision",
         time: "0:58",
         title: "Scoring trip logic",
-        narrative: "A jammer's first trip status is being reviewed by new scorekeeping volunteers.",
-        question: "When do points start counting for a jammer?",
+        narrative:
+          "Blue completed initial at 0:14. At 0:58, the current jammer legally laps three opposing blockers.",
+        question: "How many points are available on that 0:58 pass sequence?",
         options: [
-          "Only after initial trip is complete",
-          "Immediately on first pass through the pack",
-          "Only during power jams",
-          "Only if star pass occurred"
+          "3 points",
+          "0 points",
+          "1 point",
+          "4 points"
         ],
-        answer: "Only after initial trip is complete",
-        explanation: "Rule 3.1: no points are earned on the initial trip.",
+        answer: "3 points",
+        explanation:
+          "Rule 3.1 prevents points on initial only. Once initial is complete, one point is earned per legally passed opposing blocker.",
         review: { tab: "rules", id: "scoring", label: "Scoring Fundamentals" }
+      }
+    ]
+  },
+  {
+    id: "blocker-seat-queue",
+    title: "Blocker Seat Queue Saturation Scenario",
+    focus: "Seat priority, queue order, and carryover seconds when seats are full.",
+    overview:
+      "Work a packed penalty box sequence where blocker arrival order must be tracked by exact times to prevent illegal releases.",
+    objectives: [
+      "Apply blocker queue order by physical entry timestamp.",
+      "Use exact 20-second stand and 30-second done marks for each seated blocker.",
+      "Compute remaining carryover seconds at jam end."
+    ],
+    references: ["Rules 4.4.1", "Rules 4.4.3", "Officiating Procedures 7.4-7.5"],
+    events: [
+      {
+        type: "context",
+        time: "0:00",
+        title: "Jam starts",
+        narrative: "Penalty box starts empty with three blocker seats available."
+      },
+      {
+        type: "context",
+        time: "0:12",
+        title: "First blocker seated",
+        narrative: "Blocker A reports legally and sits at 0:12."
+      },
+      {
+        type: "context",
+        time: "0:18",
+        title: "Second blocker seated",
+        narrative: "Blocker B reports and sits at 0:18."
+      },
+      {
+        type: "context",
+        time: "0:24",
+        title: "Third blocker seated",
+        narrative: "Blocker C sits at 0:24. All blocker seats are now full."
+      },
+      {
+        type: "decision",
+        time: "0:30",
+        title: "Queue assignment",
+        narrative: "Blocker D reports at 0:30 while all seats remain occupied.",
+        question: "What should the penalty box manager do immediately?",
+        options: [
+          "Record Blocker D as first waiting blocker in queue order",
+          "Seat Blocker D ahead of the earliest seated blocker",
+          "Ignore Blocker D until jam end",
+          "Choose queue order based on game score"
+        ],
+        answer: "Record Blocker D as first waiting blocker in queue order",
+        explanation:
+          "When blocker seats are full, waiting order is tracked by physical entry order and timestamp.",
+        review: { tab: "nso", id: "penalty-box-manager", label: "Penalty Box Manager" }
+      },
+      {
+        type: "context",
+        time: "0:42",
+        title: "First seat opens",
+        narrative: "Blocker A reaches 30 seconds at 0:42 and legally exits the box."
+      },
+      {
+        type: "decision",
+        time: "0:42",
+        title: "Seat fill order",
+        narrative: "A seat opens with a waiting blocker already queued.",
+        question: "Who gets that newly open blocker seat?",
+        options: [
+          "The first waiting blocker in queue order (Blocker D)",
+          "Any blocker from the same team as Blocker A",
+          "The most recently penalized blocker",
+          "No one until the next jam"
+        ],
+        answer: "The first waiting blocker in queue order (Blocker D)",
+        explanation:
+          "Blocker queue rules use first waiting skater order, not team preference or recency.",
+        review: { tab: "rules", id: "penalty-enforcement", label: "Penalty Enforcement" }
+      },
+      {
+        type: "decision",
+        time: "0:48",
+        title: "Second blocker release cue",
+        narrative: "Blocker B has been seated from 0:18 to 0:48.",
+        question: "What is the correct cue at 0:48 if Blocker B is upright?",
+        options: ["Done", "Stand", "No Pack", "Official Review"],
+        answer: "Done",
+        explanation:
+          "Thirty seconds have been served (0:18 to 0:48), so done is correct if release conditions are met.",
+        review: { tab: "nso", id: "penalty-box-timer", label: "Penalty Box Timer" }
+      },
+      {
+        type: "context",
+        time: "0:58",
+        title: "Jam ends",
+        narrative: "The jam ends at 0:58. Blocker D has served from 0:42 to 0:58 (16 seconds)."
+      },
+      {
+        type: "decision",
+        time: "0:58",
+        title: "Carryover amount",
+        narrative: "Blocker D's penalty is not complete at jam end.",
+        question: "How much penalty time remains for Blocker D?",
+        options: ["14 seconds", "10 seconds", "16 seconds", "4 seconds"],
+        answer: "14 seconds",
+        explanation:
+          "A standard penalty is 30 seconds of jam time. After serving 16 seconds, 14 seconds remain.",
+        review: { tab: "rules", id: "penalty-enforcement", label: "Penalty Enforcement" }
+      }
+    ]
+  },
+  {
+    id: "timeout-review-clocks",
+    title: "Timeout and Review Clock Control Scenario",
+    focus: "30-second lineup timing, 60-second team timeout timing, and review rights.",
+    overview:
+      "Run the game clock workflow after a quick jam ending, then process a team timeout and official review with exact period-clock math.",
+    objectives: [
+      "Calculate earliest legal next jam start after jam end.",
+      "Apply exact 60-second timeout duration on period clock.",
+      "Confirm official review rights and signaling."
+    ],
+    references: ["Rules 1.3.1", "Rules 1.3.2", "Rules 1.3.4"],
+    events: [
+      {
+        type: "context",
+        time: "Period 10:00",
+        title: "Jam starts",
+        narrative: "The period begins at 10:00 and the jam starts immediately."
+      },
+      {
+        type: "context",
+        time: "Jam 0:36",
+        title: "Jam called off",
+        narrative: "Lead jammer calls off at jam time 0:36, leaving period clock at 9:24."
+      },
+      {
+        type: "decision",
+        time: "Period 9:24",
+        title: "Earliest next jam time",
+        narrative: "No timeout or review is requested yet.",
+        question: "What is the earliest legal next jam-starting whistle under normal conditions?",
+        options: ["Period 8:54", "Period 9:04", "Period 8:24", "Period 9:24"],
+        answer: "Period 8:54",
+        explanation: "Minimum time between jams is 30 seconds, so 9:24 transitions to 8:54.",
+        review: { tab: "rules", id: "game-format", label: "Game Format and Timing" }
+      },
+      {
+        type: "context",
+        time: "Period 9:05",
+        title: "Team timeout requested",
+        narrative: "At 9:05, the captain requests a team timeout before the next jam starts."
+      },
+      {
+        type: "decision",
+        time: "Period 9:05",
+        title: "Timeout expiry",
+        narrative: "A team timeout runs for a full 60 seconds.",
+        question: "If granted at 9:05, what period time marks timeout expiration?",
+        options: ["Period 8:05", "Period 8:35", "Period 7:05", "Period 9:35"],
+        answer: "Period 8:05",
+        explanation: "Team timeout duration is 60 seconds, so period clock drops from 9:05 to 8:05.",
+        review: { tab: "rules", id: "timeouts-reviews", label: "Timeouts and Reviews" }
+      },
+      {
+        type: "context",
+        time: "Period 8:05",
+        title: "Official review requested",
+        narrative: "Immediately after timeout, the captain requests an official review."
+      },
+      {
+        type: "decision",
+        time: "Period 8:05",
+        title: "Review-right count",
+        narrative: "NSOs must confirm entitlement before processing review paperwork.",
+        question: "How many official reviews is each team entitled to per period?",
+        options: ["1", "0", "2", "3"],
+        answer: "1",
+        explanation: "Each team has one official review per period under Rule 1.3.2.",
+        review: { tab: "rules", id: "timeouts-reviews", label: "Timeouts and Reviews" }
+      },
+      {
+        type: "decision",
+        time: "Period 8:05",
+        title: "Signal confirmation",
+        narrative: "Ref crew must communicate that this stoppage is a review, not a team timeout.",
+        question: "Which signal matches that request type?",
+        options: ["Official Review", "Team Timeout", "Official Timeout", "Time Stopped"],
+        answer: "Official Review",
+        explanation: "The correct signal for a captain's review request is Official Review.",
+        review: { tab: "signals", id: "official-review", label: "Official Review Signal" }
+      }
+    ]
+  },
+  {
+    id: "star-pass-penalty-carryover",
+    title: "Star Pass to Penalty Carryover Scenario",
+    focus: "Star pass identity changes plus exact penalty carryover seconds.",
+    overview:
+      "Track a jam where jammer identity changes by star pass, then the new jammer serves a penalty that carries into the next jam.",
+    objectives: [
+      "Apply exact timing around star pass completion.",
+      "Use stand/done marks for jammer penalty service.",
+      "Carry precise remaining jammer time into the next jam."
+    ],
+    references: ["Rules 3.4", "Rules 4.4.1", "Rules 4.4.2"],
+    events: [
+      {
+        type: "context",
+        time: "0:00",
+        title: "Jam starts",
+        narrative: "Both jammers begin initial trips under full-pack conditions."
+      },
+      {
+        type: "context",
+        time: "0:46",
+        title: "Star transfer begins",
+        narrative: "Blue jammer begins a legal star transfer to their pivot at 0:46."
+      },
+      {
+        type: "decision",
+        time: "0:47",
+        title: "Transfer completion signal",
+        narrative: "At 0:47, the transfer is complete and jammer identity changes.",
+        question: "Which signal confirms legal transfer completion?",
+        options: ["Star Pass Complete", "Lead Jammer", "No Earned Pass", "Report to Box"],
+        answer: "Star Pass Complete",
+        explanation: "Star Pass Complete marks the legal moment that jammer status transfers to pivot.",
+        review: { tab: "signals", id: "star-pass-complete", label: "Star Pass Complete Signal" }
+      },
+      {
+        type: "context",
+        time: "0:50",
+        title: "New jammer penalized",
+        narrative:
+          "The new jammer (former pivot) receives a penalty and sits at 0:50. Penalty timing starts immediately."
+      },
+      {
+        type: "decision",
+        time: "1:10",
+        title: "Stand timing",
+        narrative: "The jammer has now served 20 seconds (0:50 to 1:10).",
+        question: "What cue is required at 1:10?",
+        options: ["Stand", "Done", "Out of Play", "No Pack"],
+        answer: "Stand",
+        explanation: "The stand cue is issued with 10 seconds remaining in a standard 30-second penalty.",
+        review: { tab: "nso", id: "penalty-box-timer", label: "Penalty Box Timer" }
+      },
+      {
+        type: "context",
+        time: "1:14",
+        title: "Jam ends before full service",
+        narrative: "Jam ends at 1:14. The jammer served 24 seconds and still owes 6 seconds."
+      },
+      {
+        type: "decision",
+        time: "1:14",
+        title: "Next jam start position",
+        narrative: "The jammer has unserved penalty time at jam end.",
+        question: "Where must this jammer start the next jam?",
+        options: [
+          "Seated in the penalty box to continue service",
+          "On track at jammer line",
+          "On the pivot line as blocker",
+          "At team bench for substitution"
+        ],
+        answer: "Seated in the penalty box to continue service",
+        explanation: "Unserved jammer penalty time carries into the next jam and is resumed in the box.",
+        review: { tab: "rules", id: "penalty-enforcement", label: "Penalty Enforcement" }
+      },
+      {
+        type: "decision",
+        time: "Next Jam 0:00",
+        title: "Final 6-second release",
+        narrative: "Next jam starts with 6 seconds remaining on the jammer penalty.",
+        question:
+          "If the next jam-starting whistle is at period clock 6:00, when should the box timer call done?",
+        options: [
+          "At 5:54, after 6 seconds of jam time",
+          "At 5:50, after a full stand interval",
+          "Immediately at 6:00",
+          "At the next jam-ending whistle"
+        ],
+        answer: "At 5:54, after 6 seconds of jam time",
+        explanation: "The remaining service is exactly 6 seconds, counted from the next jam start.",
+        review: { tab: "rules", id: "penalty-enforcement", label: "Penalty Enforcement" }
+      }
+    ]
+  },
+  {
+    id: "engagement-distance-recovery",
+    title: "Engagement Distance Recovery Scenario",
+    focus: "No-pack communication and exact engagement-zone distance checks.",
+    overview:
+      "Follow a pack split and reform sequence where officials must call no-pack quickly and enforce the 20-foot engagement-zone limits precisely.",
+    objectives: [
+      "Call no-pack as soon as pack definition is lost.",
+      "Calculate exact feet outside the 20-foot engagement zone.",
+      "Use correct signals as pack status changes."
+    ],
+    references: ["Rules 2.3", "Rules 2.5", "Cues/Codes/Signals: No Pack / Pack Is Here"],
+    events: [
+      {
+        type: "context",
+        time: "0:00",
+        title: "Pack defined",
+        narrative: "A legal pack is established at jam start."
+      },
+      {
+        type: "context",
+        time: "0:11",
+        title: "Pack split",
+        narrative: "Blockers separate and there is no clear largest in-proximity grouping."
+      },
+      {
+        type: "decision",
+        time: "0:13",
+        title: "Immediate communication",
+        narrative: "Two seconds after split, skaters need legal status direction.",
+        question: "Which signal/call should be used first?",
+        options: ["No Pack", "Pack Is Here", "Lead Jammer", "Jam Ending"],
+        answer: "No Pack",
+        explanation: "No Pack communicates that pack definition is not currently met.",
+        review: { tab: "signals", id: "no-pack", label: "No Pack Signal" }
+      },
+      {
+        type: "context",
+        time: "0:17",
+        title: "Illegal engagement distance",
+        narrative: "A blocker initiates contact while 22 feet behind the rear of the pack."
+      },
+      {
+        type: "decision",
+        time: "0:17",
+        title: "Distance math",
+        narrative: "Engagement zone extends 20 feet from the pack boundaries.",
+        question: "How far outside legal engagement distance is that blocker?",
+        options: ["2 feet", "5 feet", "10 feet", "20 feet"],
+        answer: "2 feet",
+        explanation: "At 22 feet behind a 20-foot boundary, the blocker is 2 feet out of zone.",
+        review: { tab: "rules", id: "pack-engagement", label: "Pack and Engagement Zone" }
+      },
+      {
+        type: "decision",
+        time: "0:18",
+        title: "Rules area ownership",
+        narrative: "Illegal contact continues outside the legal engagement zone.",
+        question: "Which rules area governs this enforcement decision?",
+        options: [
+          "Out-of-play / engagement-zone enforcement",
+          "Penalty-box timing enforcement",
+          "Star pass completion rules",
+          "Official review retention rules"
+        ],
+        answer: "Out-of-play / engagement-zone enforcement",
+        explanation: "This call is controlled by pack and engagement-zone rules, not penalty-box timing.",
+        review: { tab: "rules", id: "pack-engagement", label: "Pack and Engagement Zone" }
+      },
+      {
+        type: "context",
+        time: "0:22",
+        title: "Pack reforms",
+        narrative: "Blockers re-form legal in-proximity grouping at 0:22."
+      },
+      {
+        type: "decision",
+        time: "0:22",
+        title: "Reform communication",
+        narrative: "Skaters need immediate orientation to the re-established pack location.",
+        question: "Which signal best communicates legal pack location now?",
+        options: ["Pack Is Here", "No Pack", "Out of Play", "Time Stopped"],
+        answer: "Pack Is Here",
+        explanation: "Pack Is Here helps skaters identify legal engagement reference after reform.",
+        review: { tab: "signals", id: "pack-is-here", label: "Pack Is Here Signal" }
+      },
+      {
+        type: "decision",
+        time: "0:24",
+        title: "Coverage role",
+        narrative: "Crew needs strongest inside perspective on in-pack legality after reform.",
+        question: "Which referee role is centered on this inside-pack coverage?",
+        options: ["Inside Pack Ref", "Jammer Ref", "Head NSO", "Scorekeeper"],
+        answer: "Inside Pack Ref",
+        explanation: "Inside Pack Refs are positioned for inside-lane pack definition and engagement legality.",
+        review: { tab: "refs", id: "ipr", label: "Inside Pack Ref" }
+      }
+    ]
+  },
+  {
+    id: "upright-release-check",
+    title: "Upright Stand and Release Verification Scenario",
+    focus: "Exact stand/done marks plus upright verification at release.",
+    overview:
+      "Practice the final 10-second standing phase and release handling when posture is not upright at the completion mark.",
+    objectives: [
+      "Call stand exactly at 20 seconds served.",
+      "Confirm upright posture at completion before release.",
+      "Compute remaining time when jam ends before done."
+    ],
+    references: ["Rules 4.4.1", "Officiating Procedures 7.4-7.5"],
+    events: [
+      {
+        type: "context",
+        time: "0:00",
+        title: "Jam begins",
+        narrative: "Penalty box starts clear and timers are ready."
+      },
+      {
+        type: "context",
+        time: "0:32",
+        title: "Skater seated",
+        narrative: "A blocker reports legally and sits at 0:32."
+      },
+      {
+        type: "decision",
+        time: "0:52",
+        title: "Stand cue moment",
+        narrative: "Exactly 20 seconds have been served (0:32 to 0:52).",
+        question: "What cue is required now?",
+        options: ["Stand", "Done", "No Pack", "Return to Track"],
+        answer: "Stand",
+        explanation: "Stand is called at 20 seconds served, starting the final 10-second phase.",
+        review: { tab: "nso", id: "penalty-box-timer", label: "Penalty Box Timer" }
+      },
+      {
+        type: "context",
+        time: "1:02",
+        title: "Completion mark reached",
+        narrative: "Thirty seconds have elapsed, but the skater is still crouched with one knee on the floor."
+      },
+      {
+        type: "decision",
+        time: "1:02",
+        title: "Release check",
+        narrative: "Timer must decide release versus hold based on upright status.",
+        question: "What is the correct action at 1:02?",
+        options: [
+          "Hold release until skater is fully upright, then call done",
+          "Call done immediately at 30 seconds regardless of posture",
+          "Reset the full 30-second penalty",
+          "Issue automatic misconduct"
+        ],
+        answer: "Hold release until skater is fully upright, then call done",
+        explanation: "Release handling requires upright completion; do not release from a non-upright posture.",
+        review: { tab: "rules", id: "penalty-enforcement", label: "Penalty Enforcement" }
+      },
+      {
+        type: "context",
+        time: "1:05",
+        title: "Skater becomes upright",
+        narrative: "The skater reaches a full upright position at 1:05."
+      },
+      {
+        type: "decision",
+        time: "1:05",
+        title: "Release cue",
+        narrative: "All release conditions are now met.",
+        question: "Which cue should the timer use now?",
+        options: ["Done", "Stand", "No Pack", "Official Timeout"],
+        answer: "Done",
+        explanation: "Once upright and eligible for release, the timer uses done.",
+        review: { tab: "nso", id: "penalty-box-timer", label: "Penalty Box Timer" }
+      },
+      {
+        type: "decision",
+        time: "Hypothetical check",
+        title: "Early jam-end math",
+        narrative: "If this same jam had ended at 1:00 instead of continuing to 1:05, service would stop at whistle.",
+        question: "How much penalty time would remain at a 1:00 jam-ending whistle?",
+        options: ["2 seconds", "0 seconds", "5 seconds", "10 seconds"],
+        answer: "2 seconds",
+        explanation: "From 0:32 to 1:00 is 28 seconds served, leaving 2 seconds to carry into next jam.",
+        review: { tab: "rules", id: "penalty-enforcement", label: "Penalty Enforcement" }
       }
     ]
   }
