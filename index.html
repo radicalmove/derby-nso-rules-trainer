@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Derby Rules + Officiating Trainer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800&family=Archivo+Black&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#mainContent">Skip to main content</a>
+    <header class="hero">
+      <div class="hero-layer"></div>
+      <div class="hero-content">
+        <p class="eyebrow">Flat Track Roller Derby</p>
+        <h1>Rules + Officiating Trainer</h1>
+        <p>
+          Train NSO role knowledge, skater rules, referee hand signals, and referee
+          positions in one app.
+        </p>
+      </div>
+    </header>
+
+    <main id="mainContent">
+      <section class="summary-panel">
+        <article>
+          <h2 id="roleProgress">0/0</h2>
+          <p>NSO roles marked learned</p>
+        </article>
+        <article>
+          <h2 id="ruleProgress">0/0</h2>
+          <p>Rule modules marked learned</p>
+        </article>
+        <article>
+          <h2 id="bestDrill">0%</h2>
+          <p>Best drill score</p>
+        </article>
+      </section>
+
+      <section class="tabs" role="tablist" aria-label="Course Sections">
+        <button class="tab-btn active" data-tab="nso" role="tab" aria-selected="true" aria-controls="nso" id="tab-nso">NSO Roles</button>
+        <button class="tab-btn" data-tab="rules" role="tab" aria-selected="false" aria-controls="rules" id="tab-rules">Skater Rules</button>
+        <button class="tab-btn" data-tab="signals" role="tab" aria-selected="false" aria-controls="signals" id="tab-signals">Ref Signals</button>
+        <button class="tab-btn" data-tab="refs" role="tab" aria-selected="false" aria-controls="refs" id="tab-refs">Ref Positions</button>
+        <button class="tab-btn" data-tab="simulation" role="tab" aria-selected="false" aria-controls="simulation" id="tab-simulation">Simulations</button>
+        <button class="tab-btn" data-tab="drills" role="tab" aria-selected="false" aria-controls="drills" id="tab-drills">Drills</button>
+      </section>
+
+      <section id="nso" class="tab-panel active" role="tabpanel" aria-labelledby="tab-nso">
+        <div class="filter-wrap">
+          <label for="roleFilter">Role family:</label>
+          <select id="roleFilter">
+            <option value="all">All roles</option>
+            <option value="leadership">Crew Leadership</option>
+            <option value="timing">Timing</option>
+            <option value="scoring">Scoring</option>
+            <option value="penalties">Penalties</option>
+            <option value="lineups">Lineups</option>
+          </select>
+          <input
+            id="roleSearch"
+            type="search"
+            placeholder="Search role or duty..."
+            aria-label="Search NSO roles"
+          />
+        </div>
+
+        <div class="learn-layout">
+          <aside id="roleList" class="role-list" aria-label="NSO role list"></aside>
+          <article id="roleDetail" class="role-detail" aria-live="polite"></article>
+        </div>
+      </section>
+
+      <section id="rules" class="tab-panel" role="tabpanel" aria-labelledby="tab-rules" hidden>
+        <div class="learn-layout">
+          <aside id="ruleList" class="role-list" aria-label="Rule module list"></aside>
+          <article id="ruleDetail" class="role-detail" aria-live="polite"></article>
+        </div>
+      </section>
+
+      <section id="signals" class="tab-panel" role="tabpanel" aria-labelledby="tab-signals" hidden>
+        <div class="filter-wrap">
+          <label for="signalFilter">Signal group:</label>
+          <select id="signalFilter">
+            <option value="all">All signals</option>
+            <option value="penalty">Penalty calls</option>
+            <option value="warning">Warnings / position status</option>
+            <option value="jammer">Jammer communication</option>
+            <option value="timing">Timing and stoppages</option>
+            <option value="box">Penalty box communication</option>
+          </select>
+          <input
+            id="signalSearch"
+            type="search"
+            placeholder="Search signal name or meaning..."
+            aria-label="Search referee signals"
+          />
+        </div>
+
+        <div class="learn-layout">
+          <aside id="signalList" class="role-list" aria-label="Ref signal list"></aside>
+          <article id="signalDetail" class="role-detail" aria-live="polite"></article>
+        </div>
+      </section>
+
+      <section id="refs" class="tab-panel" role="tabpanel" aria-labelledby="tab-refs" hidden>
+        <p class="section-note">
+          Common on-skates referee positions are shown below. Exact staffing numbers vary by
+          crew size and event.
+        </p>
+        <section class="track-layout-block">
+          <h3>Track Layout and Position Map</h3>
+          <p>
+            Use this orientation map before studying role cards so track zones, lines, and crew
+            placements are easier to visualize.
+          </p>
+          <figure class="track-figure">
+            <img
+              src="assets/track/track-diagram-v3b.gif"
+              alt="Roller derby flat track with turns one through four, jammer and pivot lines, penalty box placement, and common referee and NSO positions."
+              loading="lazy"
+            />
+            <figcaption>Track layout with common referee and NSO positioning references.</figcaption>
+          </figure>
+          <p class="zone-source">Source: Marc "F-Stop" Perkins, Inside Pack Ref (2015).</p>
+        </section>
+        <div id="refPositionGrid" class="position-grid"></div>
+      </section>
+
+      <section id="simulation" class="tab-panel" role="tabpanel" aria-labelledby="tab-simulation" hidden>
+        <p class="section-note">
+          Play through jam timelines. The simulation pauses at decision points and scores your
+          choices.
+        </p>
+        <div class="learn-layout">
+          <aside
+            id="simulationList"
+            class="role-list"
+            aria-label="Simulation scenario list"
+          ></aside>
+          <article id="simulationDetail" class="role-detail" aria-live="polite"></article>
+        </div>
+      </section>
+
+      <section id="drills" class="tab-panel" role="tabpanel" aria-labelledby="tab-drills" hidden>
+        <div class="quiz-card">
+          <h3>Scenario Drills</h3>
+          <p>
+            Run focused drills for NSO responsibilities, skater rules, and ref signals, or take
+            a mixed assessment.
+          </p>
+          <div class="drill-mode-row">
+            <button class="action-btn drill-mode-btn" data-drill-mode="nso">NSO Drill</button>
+            <button class="action-btn drill-mode-btn" data-drill-mode="rules">Rules Drill</button>
+            <button class="action-btn drill-mode-btn" data-drill-mode="signals">Signals Drill</button>
+            <button class="action-btn drill-mode-btn" data-drill-mode="mixed">Mixed Drill</button>
+          </div>
+        </div>
+
+        <div id="quizCard" class="quiz-card">
+          <h3>Ready to drill</h3>
+          <p>Choose a drill mode above to begin.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>
+        Training content aligned to WFTDA Rules (January 1, 2025), WFTDA Officiating
+        Procedures (April 2024), and WFTDA Cues/Codes/Signals (December 2018).
+      </p>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>
