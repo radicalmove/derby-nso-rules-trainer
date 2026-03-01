@@ -408,7 +408,7 @@ const refSignals = [
     meaning: "Illegal contact to the head or above legal target zone.",
     whenUsed: "Used when a skater initiates penalizable high contact.",
     cueWords: "High Block",
-    reference: "Cues/Codes/Signals: H"
+    reference: "Cues/Codes/Signals: A"
   },
   {
     id: "low-block",
@@ -444,7 +444,16 @@ const refSignals = [
     meaning: "Illegal use of leg/foot to block or trip.",
     whenUsed: "Used for penalizable contact using the leg or foot.",
     cueWords: "Leg Block",
-    reference: "Cues/Codes/Signals: L"
+    reference: "Cues/Codes/Signals: E"
+  },
+  {
+    id: "illegal-contact",
+    name: "Illegal Contact",
+    category: "penalty",
+    meaning: "Other illegal contact actions, including early hit/assist violations.",
+    whenUsed: "Called when illegal contact does not fit other primary contact categories.",
+    cueWords: "Illegal Contact",
+    reference: "Cues/Codes/Signals: C"
   },
   {
     id: "multiplayer",
@@ -471,7 +480,7 @@ const refSignals = [
     meaning: "Re-entering play illegally to gain position.",
     whenUsed: "Called when re-entry bypasses required position restoration.",
     cueWords: "Cut",
-    reference: "Cues/Codes/Signals: C"
+    reference: "Cues/Codes/Signals: X"
   },
   {
     id: "illegal-position",
@@ -481,6 +490,33 @@ const refSignals = [
     whenUsed: "Used for position violations with impact.",
     cueWords: "Illegal Position",
     reference: "Cues/Codes/Signals: P"
+  },
+  {
+    id: "interference",
+    name: "Interference",
+    category: "penalty",
+    meaning: "Illegal interference with game flow, including delay-of-game actions.",
+    whenUsed: "Called when actions illegally interfere with officiating or legal game progression.",
+    cueWords: "Interference",
+    reference: "Cues/Codes/Signals: N"
+  },
+  {
+    id: "illegal-procedure",
+    name: "Illegal Procedure",
+    category: "penalty",
+    meaning: "Procedure violations including star-pass and game-process violations.",
+    whenUsed: "Used for illegal procedural actions not covered by other penalty families.",
+    cueWords: "Illegal Procedure",
+    reference: "Cues/Codes/Signals: I"
+  },
+  {
+    id: "misconduct",
+    name: "Misconduct",
+    category: "penalty",
+    meaning: "Unsporting or abusive behavior requiring misconduct penalty enforcement.",
+    whenUsed: "Called for conduct that violates sportsmanship or officiating compliance standards.",
+    cueWords: "Misconduct",
+    reference: "Cues/Codes/Signals: G"
   },
   {
     id: "report-box",
@@ -1955,15 +1991,19 @@ const jamSimulations = [
 
 const SIGNAL_PENALTY_CODES = {
   "back-block": "B",
-  "high-block": "H",
+  "high-block": "A",
   "low-block": "L",
   forearm: "F",
-  "head-block": "HB",
-  "leg-block": "LG",
+  "head-block": "H",
+  "leg-block": "E",
+  "illegal-contact": "C",
   multiplayer: "M",
   direction: "D",
-  cut: "C",
-  "illegal-position": "P"
+  cut: "X",
+  "illegal-position": "P",
+  interference: "N",
+  "illegal-procedure": "I",
+  misconduct: "G"
 };
 
 const SIGNAL_OFFICIAL_IMAGE_MAP = {
@@ -1973,10 +2013,14 @@ const SIGNAL_OFFICIAL_IMAGE_MAP = {
   "head-block": "assets/signals/wftda-penalty-crops/head-block.png",
   forearm: "assets/signals/wftda-penalty-crops/forearm.png",
   "leg-block": "assets/signals/wftda-penalty-crops/leg-block.png",
+  "illegal-contact": "assets/signals/wftda-penalty-crops/illegal-contact.png",
   multiplayer: "assets/signals/wftda-penalty-crops/multiplayer.png",
   "illegal-position": "assets/signals/wftda-penalty-crops/illegal-position.png",
   cut: "assets/signals/wftda-penalty-crops/cut.png",
-  direction: "assets/signals/wftda-penalty-crops/direction.png"
+  direction: "assets/signals/wftda-penalty-crops/direction.png",
+  interference: "assets/signals/wftda-penalty-crops/interference.png",
+  "illegal-procedure": "assets/signals/wftda-penalty-crops/illegal-procedure.png",
+  misconduct: "assets/signals/wftda-penalty-crops/misconduct.png"
 };
 
 const STORAGE_KEYS = {
